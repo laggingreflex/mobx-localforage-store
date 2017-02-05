@@ -1,0 +1,11 @@
+--check-leaks
+--compilers js:babel-register
+--require babel-polyfill
+--require source-map-support/register
+--require test/before.js
+--cache-dir coverage/.cache
+--report lcov
+--reporter spec
+--debug
+--bail
+--all

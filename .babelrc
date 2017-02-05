@@ -1,0 +1,21 @@
+{
+  "presets": [
+    "es2015",
+    "stage-0"
+  ],
+  "plugins": [
+    "transform-decorators-legacy"
+  ],
+  "env": {
+    "test": {
+      "plugins": [
+        "rewire"
+      ]
+    },
+    "development": {
+      "plugins": [
+        ["annotate-console-log", { "scriptPath": "relative" }]
+      ]
+    }
+  }
+}
