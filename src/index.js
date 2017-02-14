@@ -110,6 +110,9 @@ export default class Store {
   get ready() { return this[readySymbol]; }
 
   async setItem(key, data) {
+    if (typeof data === 'undefined') {
+      data = this[key];
+    }
     if (!this[keysSymbol].includes(key)) {
       this[keysSymbol].push(key);
     }
@@ -129,7 +132,7 @@ export default class Store {
       this[keysSymbol].push(key);
     }
     const data = await this[storeSymbol].getItem(key);
-    // await this.setItem(key, data);
+    await this.setItem(key, data);
     return data;
   }
 
@@ -158,6 +161,9 @@ export default class Store {
 
   clear() {
     return Promise.all(this[keysSymbol].map((key) => this.removeItem(key)));
+  }
+  save() {
+    return Promise.all(this[keysSymbol].map((key) => this.setItem(key)));
   }
 
   toJS() {
