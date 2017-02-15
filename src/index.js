@@ -2,6 +2,7 @@ import localForage from 'localforage';
 import * as mobx from 'mobx';
 import * as mobxObserver from 'mobx-observer';
 import ority from 'ority';
+import { symbol } from './utils';
 
 localForage.config({
   // driver: localforage.WEBSQL, // Force WebSQL; same as using setDriver()
@@ -9,20 +10,9 @@ localForage.config({
   // storeName: 'appdata', // Should be alphanumeric, with underscores.
 });
 
-let keysSymbol = '__keys';
-if (typeof Symbol !== 'undefined') {
-  keysSymbol = Symbol(keysSymbol);
-}
-
-let storeSymbol = '__store';
-if (typeof Symbol !== 'undefined') {
-  storeSymbol = Symbol(storeSymbol);
-}
-
-let readySymbol = '__ready';
-if (typeof Symbol !== 'undefined') {
-  readySymbol = Symbol(readySymbol);
-}
+const keysSymbol = symbol('__keys');
+const storeSymbol = symbol('__store');
+const readySymbol = symbol('__ready');
 
 export default class Store {
 
