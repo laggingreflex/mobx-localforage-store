@@ -40,6 +40,8 @@ export default class Store {
       this[storeSymbol] = localForage.createInstance({ name });
     }
 
+    opts = opts || {};
+
     if (Array.isArray(data)) {
       const keys = data;
       this[keysSymbol] = keys;
@@ -73,7 +75,9 @@ export default class Store {
             store[key] = value;
             return true;
           }
-          store.setItem(key, value)
+          if (opts.autosave) {
+            store.setItem(key, value)
+          }
           return true;
         }
       });
