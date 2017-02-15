@@ -14,6 +14,7 @@ const keysSymbol = symbol('__keys');
 const storeSymbol = symbol('__store');
 const readySymbol = symbol('__ready');
 const okeysSymbol = symbol('__original_keys');
+const optsSymbol = symbol('__opts');
 
 export default class Store {
 
@@ -40,7 +41,7 @@ export default class Store {
       this[storeSymbol] = localForage.createInstance({ name });
     }
 
-    opts = opts || {};
+    opts = this[optsSymbol] = opts || {};
 
     if (Array.isArray(data)) {
       const keys = data;
@@ -68,14 +69,14 @@ export default class Store {
       mobx.extendObservable(this, _data);
       this[readySymbol] = this.setState(_data);
     }
-    if (typeof Proxy !== 'undefined' && !(opts && opts.useProxy === false)) {
+    if (typeof Proxy !== 'undefined' && !(this.opts && this.opts.useProxy === false)) {
       return new Proxy(this, {
         set(store, key, value) {
           if (typeof key !== 'string') {
             store[key] = value;
             return true;
           }
-          if (opts.autosave === true || (Array.isArray(opts.autosave) && opts.autosave.includes(key))) {
+          if (this.opts.autosave === true || (Array.isArray(this.opts.autosave) && this.opts.autosave.includes(key))) {
             store.setItem(key, value)
           }
           return true;
@@ -96,6 +97,7 @@ export default class Store {
 
   get store() { return this[storeSymbol]; }
   get ready() { return this[readySymbol]; }
+  get opts() { return this[optsSymbol] }
 
   async setItem(key, data, { force } = {}) {
     if (typeof data === 'undefined') {
