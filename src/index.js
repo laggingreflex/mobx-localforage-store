@@ -41,7 +41,7 @@ export default class Store {
       this[storeSymbol] = localForage.createInstance({ name });
     }
 
-    opts = this[optsSymbol] = opts || {};
+    this[optsSymbol] = opts || {};
 
     if (Array.isArray(data)) {
       const keys = data;
@@ -71,14 +71,14 @@ export default class Store {
     }
     if (typeof Proxy !== 'undefined' && !(this.opts && this.opts.useProxy === false)) {
       return new Proxy(this, {
-        set(store, key, value) {
+        set: (store, key, value) => {
           if (typeof key !== 'string') {
-            store[key] = value;
+            this[key] = value;
             return true;
           }
-          if (this.opts.autosave === true || (Array.isArray(this.opts.autosave) && this.opts.autosave.includes(key))) {
-            store.setItem(key, value)
-          }
+          this.setItem(key, value, {
+            save: this.opts.autosave === true || (Array.isArray(this.opts.autosave) && this.opts.autosave.includes(key))
+          })
           return true;
         }
       });
@@ -99,7 +99,7 @@ export default class Store {
   get ready() { return this[readySymbol]; }
   get opts() { return this[optsSymbol] }
 
-  async setItem(key, data, { force } = {}) {
+  async setItem(key, data, { save } = {}) {
     if (typeof data === 'undefined') {
       data = this[key];
     }
@@ -112,7 +112,7 @@ export default class Store {
         [key]: this[key]
       });
     }
-    if (this[storeSymbol] && (this[okeysSymbol].includes(key) || force)) {
+    if (this[storeSymbol] && save !== false) {
       await this[storeSymbol].setItem(key, data);
     }
   }
@@ -148,15 +148,15 @@ export default class Store {
     return ret;
   }
 
-  setState(obj, { force } = {}) {
-    return Object.entries(obj).map(([key, value]) => this.setItem(key, value, { force }));
+  setState(obj, { save } = {}) {
+    return Object.entries(obj).map(([key, value]) => this.setItem(key, value, { save }));
   }
 
   clear() {
     return Promise.all(this[keysSymbol].map((key) => this.removeItem(key)));
   }
   save(keys) {
-    return Promise.all((keys || this[okeysSymbol]).map((key) => this.setItem(key, undefined, { force: true })));
+    return Promise.all((keys || this[okeysSymbol]).map((key) => this.setItem(key, undefined, { save: true })));
   }
   saveAll(except = []) {
     return this.save(this[keysSymbol].filter(a => !except.includes(a)))
