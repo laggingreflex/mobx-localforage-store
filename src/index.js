@@ -70,16 +70,7 @@ export default class Store {
             store[key] = value;
             return true;
           }
-          if (!store[keysSymbol].includes(key)) {
-            store[keysSymbol].push(key);
-          }
-          store[key] = value;
-          if (!mobx.isObservable(store, key)) {
-            mobx.extendObservable(store, {
-              [key]: store[key]
-            });
-            store.setItem(key, value)
-          }
+          store.setItem(key, value)
           return true;
         }
       });
@@ -112,8 +103,11 @@ export default class Store {
         [key]: this[key]
       });
     }
-    return this[storeSymbol] && this[storeSymbol].setItem(key, data);
+    if (this[storeSymbol] && (this[okeysSymbol].includes(key) || force)) {
+      await this[storeSymbol].setItem(key, data);
+    }
   }
+
   async getItem(key) {
     if (!this[storeSymbol]) {
       throw new Error('A unique name is require for data persistence');
