@@ -13,6 +13,7 @@ localForage.config({
 const keysSymbol = symbol('__keys');
 const storeSymbol = symbol('__store');
 const readySymbol = symbol('__ready');
+const okeysSymbol = symbol('__original_keys');
 
 export default class Store {
 
@@ -42,6 +43,8 @@ export default class Store {
     if (Array.isArray(data)) {
       const keys = data;
       this[keysSymbol] = keys;
+      this[okeysSymbol] = Array.from(this[keysSymbol]);
+
       const nullData = keys.reduce((d, k) => ({ ...d, [k]: null }), {});
       mobx.extendObservable(this, nullData);
       for (const key of keys) {
@@ -90,7 +93,7 @@ export default class Store {
   get store() { return this[storeSymbol]; }
   get ready() { return this[readySymbol]; }
 
-  async setItem(key, data) {
+  async setItem(key, data, { force } = {}) {
     if (typeof data === 'undefined') {
       data = this[key];
     }
@@ -139,15 +142,18 @@ export default class Store {
     return ret;
   }
 
-  setState(obj) {
-    return Object.entries(obj).map(([key, value]) => this.setItem(key, value));
+  setState(obj, { force } = {}) {
+    return Object.entries(obj).map(([key, value]) => this.setItem(key, value, { force }));
   }
 
   clear() {
     return Promise.all(this[keysSymbol].map((key) => this.removeItem(key)));
   }
-  save() {
-    return Promise.all(this[keysSymbol].map((key) => this.setItem(key)));
+  save(keys) {
+    return Promise.all((keys || this[okeysSymbol]).map((key) => this.setItem(key, undefined, { force: true })));
+  }
+  saveAll(except = []) {
+    return this.save(this[keysSymbol].filter(a => !except.includes(a)))
   }
 
   toJS() {
