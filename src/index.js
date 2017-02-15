@@ -75,7 +75,7 @@ export default class Store {
             store[key] = value;
             return true;
           }
-          if (opts.autosave) {
+          if (opts.autosave === true || (Array.isArray(opts.autosave) && opts.autosave.includes(key))) {
             store.setItem(key, value)
           }
           return true;
