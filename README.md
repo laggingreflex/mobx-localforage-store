@@ -58,6 +58,9 @@ The API is much like [localForage] but it makes the properties observable.
 - `opts`
 
   - `opts.useProxy` (default:true if available) Uses ES6 Proxy to automatically make properties set mobx-reactive.
+  - `opts.debounce` (default:false) Uses [debounce-promise] to delay `setItem`. Although directly changing properties triggers mobx (which itself is expensive) and it bypasses the debounced `setItem`.
+
+[debounce-promise]: https://www.npmjs.com/package/debounce-promise
 
 ##### Method similar to `localForage`:
 
