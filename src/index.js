@@ -2,7 +2,7 @@ import localForage from 'localforage';
 import * as mobx from 'mobx';
 import * as mobxObserver from 'mobx-observer';
 import ority from 'ority';
-import { symbol } from './utils';
+import { symbol, debounce } from './utils';
 
 localForage.config({
   // driver: localforage.WEBSQL, // Force WebSQL; same as using setDriver()
@@ -43,6 +43,28 @@ export default class Store {
 
     this[optsSymbol] = opts || {};
 
+
+    if (this.opts.debounce !== false) {
+      this._storeItem = this.storeItem;
+      this.storeItemDebounced = debounce(::this._storeItem, this.opts.debounce);
+      this.storeItem = (key, data, opts = {}) => {
+        if (opts.immediate || opts.debounce === false) {
+          return this._storeItem(key, data, opts);
+        } else {
+          return this.storeItemDebounced(key, data, opts);
+        }
+      }
+      this._setItem = this.setItem;
+      this.setItemDebounced = debounce(::this._setItem, this.opts.debounce);
+      this.setItem = (key, data, opts = {}) => {
+        if (opts.immediate || opts.debounce === false) {
+          return this._setItem(key, data, opts);
+        } else {
+          return this.setItemDebounced(key, data, opts);
+        }
+      }
+    }
+
     if (Array.isArray(data)) {
       const keys = data;
       this[keysSymbol] = keys;
@@ -71,6 +93,10 @@ export default class Store {
     }
     if (typeof Proxy !== 'undefined' && !(this.opts && this.opts.useProxy === false)) {
       return new Proxy(this, {
+        deleteProperty: (store, key) => {
+          delete store[key];
+          return true;
+        },
         set: (store, key, value) => {
           if (typeof key !== 'string') {
             this[key] = value;
@@ -99,7 +125,13 @@ export default class Store {
   get ready() { return this[readySymbol]; }
   get opts() { return this[optsSymbol] }
 
-  async setItem(key, data, { save } = {}) {
+  async storeItem(key, data) {
+    if (!this[storeSymbol]) {
+      throw new Error('A unique name is require for data persistence');
+    }
+    await this[storeSymbol].setItem(key, data);
+  }
+  async setItem(key, data, opts = {}) {
     if (typeof data === 'undefined') {
       data = this[key];
     }
@@ -112,8 +144,8 @@ export default class Store {
         [key]: this[key]
       });
     }
-    if (this[storeSymbol] && save !== false) {
-      await this[storeSymbol].setItem(key, data);
+    if (this[storeSymbol] && opts.save !== false) {
+      await this.storeItem(key, data, opts)
     }
   }
 
@@ -148,15 +180,15 @@ export default class Store {
     return ret;
   }
 
-  setState(obj, { save } = {}) {
-    return Object.entries(obj).map(([key, value]) => this.setItem(key, value, { save }));
+  setState(obj, opts) {
+    return Promise.all(Object.entries(obj).map(([key, value]) => this.setItem(key, value, opts)))
   }
 
   clear() {
     return Promise.all(this[keysSymbol].map((key) => this.removeItem(key)));
   }
-  save(keys) {
-    return Promise.all((keys || this[okeysSymbol]).map((key) => this.setItem(key, undefined, { save: true })));
+  save(keys, opts = {}) {
+    return Promise.all((keys || this[okeysSymbol]).map((key) => this.setItem(key, undefined, { save: true, immediate: true, ...opts })));
   }
   saveAll(except = []) {
     return this.save(this[keysSymbol].filter(a => !except.includes(a)))

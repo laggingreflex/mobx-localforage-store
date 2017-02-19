@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { delay } from 'bluebird';
 import * as mobx from 'mobx';
 import Store, {
   __Rewire__ as rewire,
@@ -49,6 +50,7 @@ describe('Store', () => {
       it('should use proxy to automatically make value observable', async() => {
         const store = new Store();
         store.key = 1;
+        await delay(1000);
         assert(mobx.isObservable(store, 'key'), 'isObservable');
         assert(store.key == 1);
       });
@@ -85,7 +87,7 @@ describe('Store', () => {
     it('should remove item', async() => {
       const store = new Store('name', { key: 'value' });
       await store.removeItem('key');
-      assert(!store.key);
+      assert(!store.key, store.key);
     });
   });
 
@@ -107,7 +109,7 @@ describe('Store', () => {
       assert(store2.key == 'val');
     });
     it('should restore automatically from constructor', async() => {
-      const store1 = new Store('name', {key: 'value'});
+      const store1 = new Store('name', { key: 'value' });
       await store1.ready;
       const store2 = new Store('name', ['key']);
       await store2.ready;
