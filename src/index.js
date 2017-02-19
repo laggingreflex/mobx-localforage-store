@@ -44,7 +44,7 @@ export default class Store {
     this[optsSymbol] = opts || {};
 
 
-    if (this.opts.debounce !== false) {
+    if (this.opts.debounce) {
       this._storeItem = this.storeItem;
       this.storeItemDebounced = debounce(::this._storeItem, this.opts.debounce);
       this.storeItem = (key, data, opts = {}) => {
