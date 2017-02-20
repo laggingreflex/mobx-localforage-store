@@ -13,6 +13,7 @@ localForage.config({
 const keysSymbol = symbol('__keys');
 const storeSymbol = symbol('__store');
 const readySymbol = symbol('__ready');
+const oDataSymbol = symbol('__original_data');
 const okeysSymbol = symbol('__original_keys');
 const optsSymbol = symbol('__opts');
 
@@ -87,6 +88,7 @@ export default class Store {
       }
     } else {
       const _data = data || {};
+      this[oDataSymbol] = _data;
       this[keysSymbol] = Object.keys(_data);
       mobx.extendObservable(this, _data);
       this[readySymbol] = this.setState(_data);
@@ -156,7 +158,15 @@ export default class Store {
     if (!this[keysSymbol].includes(key)) {
       this[keysSymbol].push(key);
     }
-    const data = await this[storeSymbol].getItem(key);
+    const restoredData = await this[storeSymbol].getItem(key);
+    const currentData = this[key];
+    const originalData = this[oDataSymbol] && this[oDataSymbol][key];
+    let data;
+    if (typeof restoredData === 'undefined' || restoredData === null) {
+      data = currentData || originalData;
+    } else {
+      data = restoredData;
+    }
     await this.setItem(key, data);
     return data;
   }
@@ -173,10 +183,7 @@ export default class Store {
     }
     keys = keys || this[keysSymbol]
     const ret = {};
-    await Promise.all(keys.map((key) => this.getItem(key).then(data => {
-      ret[key] = data;
-      return this.setItem(key, data);
-    })));
+    await Promise.all(keys.map((key) => this.getItem(key).then(data => ret[key] = data)));
     return ret;
   }
 
