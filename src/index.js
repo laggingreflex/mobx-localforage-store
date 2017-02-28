@@ -124,7 +124,7 @@ export default class Store {
       throw new Error('A unique name is require for data persistence');
     }
     if (!(data === undefined || data === null)) {
-      await this[storeSymbol].setItem(key, data);
+      await this[storeSymbol].setItem(key, mobx.toJS(data));
     }
   }
   async setItem(key, data, opts = {}) {
