@@ -66,6 +66,9 @@ export default class Store {
       }
     }
 
+    this[keysSymbol] = this[okeysSymbol] = [];
+
+    this.setItem('isReady', false, { save: false });
     if (Array.isArray(data)) {
       const keys = data;
       this[keysSymbol] = keys;
@@ -78,9 +81,7 @@ export default class Store {
       }
       if (this[storeSymbol]) {
         this[readySymbol] = this.restore(keys).then((data) => {
-          Object.entries(data).forEach(([key, data]) => {
-            this[key] = data;
-          });
+          this.setItem('isReady', true, { save: false });
           return data;
         });
       } else {
@@ -92,6 +93,7 @@ export default class Store {
       this[keysSymbol] = Object.keys(_data);
       mobx.extendObservable(this, _data);
       this[readySymbol] = this.setState(_data);
+      this.setItem('isReady', true, { save: false });
     }
     if (typeof Proxy !== 'undefined' && !(this.opts && this.opts.useProxy === false)) {
       return new Proxy(this, {
@@ -151,7 +153,7 @@ export default class Store {
     }
   }
 
-  async getItem(key) {
+  async getItem(key, opts = {}) {
     if (!this[storeSymbol]) {
       throw new Error('A unique name is require for data persistence');
     }
@@ -161,14 +163,12 @@ export default class Store {
     const restoredData = await this[storeSymbol].getItem(key);
     const currentData = this[key];
     const originalData = this[oDataSymbol] && this[oDataSymbol][key];
-    let data;
-    if (typeof restoredData === 'undefined' || restoredData === null) {
-      data = currentData || originalData;
+    if (!(typeof restoredData === 'undefined' || restoredData === null)) {
+      await this.setItem(key, restoredData);
+      return restoredData;
     } else {
-      data = restoredData;
+      return currentData;
     }
-    await this.setItem(key, data);
-    return data;
   }
 
   removeItem(key) {
