@@ -5,12 +5,8 @@ import Store, {
   __Rewire__ as rewire,
   __ResetDependency__ as reset,
 } from '../src';
-import MockLocalStorage from 'mock-localstorage';
 
-describe('Store', () => {
-  beforeEach(() => {
-    global.localStorage = new MockLocalStorage();
-  });
+describe('Unit', () => {
 
   describe('constructor', () => {
     it('should exist and construct', () => {
@@ -73,7 +69,7 @@ describe('Store', () => {
       } catch (error) {
         return;
       }
-      throw new Error('didn\'t throw');
+      throw new Error(`didn't throw`);
     });
     it('should get and set from store', async() => {
       const store = new Store('name');
@@ -99,7 +95,7 @@ describe('Store', () => {
       } catch (error) {
         return;
       }
-      throw new Error('didn\'t throw');
+      throw new Error(`didn't throw`);
     });
     it('should restore', async() => {
       const store1 = new Store('name');
@@ -125,7 +121,7 @@ describe('Store', () => {
       } catch (error) {
         return;
       }
-      throw new Error('didn\'t throw');
+      throw new Error(`didn't throw`);
     });
     it('should clear', async() => {
       const store = new Store('name');

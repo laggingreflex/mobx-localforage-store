@@ -14,7 +14,7 @@
     },
     "development": {
       "plugins": [
-        ["annotate-console-log", { "scriptPath": "relative" }]
+        // ["annotate-console-log", { "scriptPath": "relative" }]
       ]
     }
   }
