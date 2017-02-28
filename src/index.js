@@ -44,7 +44,6 @@ export default class Store {
 
     this[optsSymbol] = opts || {};
 
-
     if (this.opts.debounce) {
       this._storeItem = this.storeItem;
       this.storeItemDebounced = debounce(::this._storeItem, this.opts.debounce);
@@ -66,35 +65,26 @@ export default class Store {
       }
     }
 
-    this[keysSymbol] = this[okeysSymbol] = [];
-
     this.setItem('isReady', false, { save: false });
-    if (Array.isArray(data)) {
-      const keys = data;
-      this[keysSymbol] = keys;
-      this[okeysSymbol] = Array.from(this[keysSymbol]);
 
-      const nullData = keys.reduce((d, k) => ({ ...d, [k]: null }), {});
-      mobx.extendObservable(this, nullData);
-      for (const key of keys) {
-        this[key] = null;
-      }
-      if (this[storeSymbol]) {
-        this[readySymbol] = this.restore(keys).then((data) => {
-          this.setItem('isReady', true, { save: false });
-          return data;
-        });
-      } else {
-        mobx.extendObservable(this, nullData);
-      }
+    this[keysSymbol] = this[okeysSymbol] = [];
+    if (Array.isArray(data)) {
+      this[keysSymbol] = data;
+      this[oDataSymbol] = data.reduce((d, k) => ({ ...d, [k]: null }), {});
     } else {
       const _data = data || {};
       this[oDataSymbol] = _data;
       this[keysSymbol] = Object.keys(_data);
-      mobx.extendObservable(this, _data);
-      this[readySymbol] = this.setState(_data);
-      this.setItem('isReady', true, { save: false });
     }
+    this[okeysSymbol] = Array.from(this[keysSymbol]);
+    this[readySymbol] = this.setState(this[oDataSymbol], { save: false });
+
+    if (this[storeSymbol]) {
+      this[readySymbol] = this[readySymbol].then(() => this.restore());
+    }
+
+    this[readySymbol] = this[readySymbol].then(() => this.setItem('isReady', true, { save: false }))
+
     if (typeof Proxy !== 'undefined' && !(this.opts && this.opts.useProxy === false)) {
       return new Proxy(this, {
         deleteProperty: (store, key) => {
@@ -133,7 +123,9 @@ export default class Store {
     if (!this[storeSymbol]) {
       throw new Error('A unique name is require for data persistence');
     }
-    await this[storeSymbol].setItem(key, data);
+    if (!(data === undefined || data === null)) {
+      await this[storeSymbol].setItem(key, data);
+    }
   }
   async setItem(key, data, opts = {}) {
     if (typeof data === 'undefined') {

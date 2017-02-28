@@ -29,6 +29,14 @@ describe('Behavioral', () => {
     await store2.ready;
     assert.deepEqual(store2.some, deepValue);
   });
+  it('should restore and overwrite default value', async() => {
+    const store1 = new Store('namespace', { some: value });
+    store1.some = value2;
+    await store1.save();
+    const store2 = new Store('namespace', { some: value });
+    await store2.ready;
+    assert.equal(store2.some, value2);
+  });
   it.skip('should restore but not overwrite newly set value', async() => {
     // doesn't make sense. bahaviour is deprecated
     const store1 = new Store('namespace', ['some']);

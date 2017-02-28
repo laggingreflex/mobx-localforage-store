@@ -104,12 +104,23 @@ describe('Unit', () => {
       await store2.restore(['key']);
       assert(store2.key == 'val');
     });
-    it('should restore automatically from constructor', async() => {
+    it.skip('should restore automatically from constructor', async() => {
+      // deprecated - default values shouldn't be saved
       const store1 = new Store('name', { key: 'value' });
       await store1.ready;
+      assert.equal(store1.key, 'value', `Couldnt even set the value the first time`);
       const store2 = new Store('name', ['key']);
       await store2.ready;
-      assert(store2.key == 'value');
+      assert.equal(store2.key, 'value', `Couldn't restore`);
+    });
+    it('should restore saved values automatically from constructor', async() => {
+      const store1 = new Store('name', { key: 'value' });
+      await store1.ready;
+      await store1.save()
+      assert.equal(store1.key, 'value', `Couldnt even set the value the first time`);
+      const store2 = new Store('name', ['key']);
+      await store2.ready;
+      assert.equal(store2.key, 'value', `Couldn't restore`);
     });
   });
 
