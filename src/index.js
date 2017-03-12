@@ -83,7 +83,7 @@ export default class Store {
       this[readySymbol] = this[readySymbol].then(() => this.restore());
     }
 
-    this[readySymbol] = this[readySymbol].then(() => this.setItem('isReady', true, { save: false }))
+    this[readySymbol] = this[readySymbol].then(() => this.setItem('isReady', true, { save: false })).then(() => this);
 
     if (typeof Proxy !== 'undefined' && !(this.opts && this.opts.useProxy === false)) {
       return new Proxy(this, {
