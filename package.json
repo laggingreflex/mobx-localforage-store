@@ -5,6 +5,7 @@
   "main": "dist",
   "scripts": {
     "build": "rimraf dist && babel src -d dist --source-maps",
+    "prepublish": "npm run build",
     "test": "mocha"
   },
   "repository": "laggingreflex/mobx-localforage-store",
