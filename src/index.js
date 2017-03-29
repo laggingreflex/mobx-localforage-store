@@ -92,7 +92,11 @@ export default class Store {
           return true;
         },
         set: (store, key, value) => {
-          if (typeof key !== 'string') {
+          if (
+            typeof key !== 'string'
+            || ['ready'].includes(key)
+            // || ('set' in (Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this), key) || {})) // this should work (and the above line wouldn't be required) but doesn't probably due to babel transpilation
+          ) {
             this[key] = value;
             return true;
           }
