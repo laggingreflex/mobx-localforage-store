@@ -1,6 +1,6 @@
 {
   "name": "mobx-localforage-store",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "MobX + localForage = a clean reactive data-persistent store",
   "main": "dist",
   "scripts": {
