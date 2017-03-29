@@ -121,6 +121,12 @@ export default class Store {
 
   get store() { return this[storeSymbol]; }
   get ready() { return this[readySymbol]; }
+  set ready(val) {
+    if (!val.then) {
+      throw new Error(`.ready must be set as a promise (received ${val})`)
+    }
+    this[readySymbol] = val.then(() => this);
+  }
   get opts() { return this[optsSymbol] }
 
   async storeItem(key, data) {
